@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MassarService",
+  title: "Auth Massar",
   description: "Clone de l'application Massar pour la gestion des notes et des absences, développé avec Next.js, Tailwind CSS et Framer Motion.",
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
