@@ -38,8 +38,8 @@ export default function AdminUsersPage() {
   const loadPageData = async () => {
     try {
       const [resUsers, resStructure] = await Promise.all([
-        axios.get('http://localhost:5000/api/auth/users'),
-        axios.get('http://localhost:5000/api/auth/academic-structure')
+        axios.get('${process.env.NEXT_PUBLIC_API_URL}/api/auth/users'),
+        axios.get('${process.env.NEXT_PUBLIC_API_URL}/api/auth/academic-structure')
       ]);
       setUtilisateurs(resUsers.data);
       setStructure(resStructure.data);
@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/auth/register', { 
+      await axios.post('${process.env.NEXT_PUBLIC_API_URL}/api/auth/register', { 
         nom, 
         prenom, 
         email, 
@@ -89,7 +89,7 @@ const handleCreateMatiere = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       // On envoie directement le nom et la filière sans bloquer côté client
-      await axios.post('http://localhost:5000/api/auth/matieres', { 
+      await axios.post('${process.env.NEXT_PUBLIC_API_URL}/api/auth/matieres', { 
         nomMatiere, 
         filiereId: filiereMatiere 
       });
@@ -105,7 +105,7 @@ const handleCreateMatiere = async (e: React.FormEvent) => {
   const handleAssignation = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/auth/users/assign-prof', {
+      await axios.post('${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/assign-prof', {
         professeurId: selectedProfId,
         filiereId: selectedFiliereId,
         matiereId: selectedMatiereId

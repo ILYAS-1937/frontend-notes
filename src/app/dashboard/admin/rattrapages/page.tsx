@@ -19,7 +19,7 @@ export default function AdminRattrapagesPage() {
   const fetchRattrapages = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/auth/rattrapages/liste-globale');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/rattrapages/liste-globale`);
       setRattrapages(res.data);
     } catch (err) {
       console.error("Erreur de calcul des rattrapages");

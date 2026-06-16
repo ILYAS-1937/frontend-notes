@@ -34,7 +34,7 @@ export default function GradebookPage() {
 
   const fetchClasse = async (id: string) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/auth/professeur/${id}/resultats`);
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/professeur/${id}/resultats`);
       
       setClasse(res.data.etudiants || []);
       setNomMatiereActive(res.data.nomMatiere || 'Matière Inconnue');
@@ -52,7 +52,7 @@ export default function GradebookPage() {
   const saveNote = async (etudiantId: number, type: string, valeur: string) => {
     if (valeur === "") return;
     try {
-      await axios.post('http://localhost:5000/api/auth/notes/save-single', {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/notes/save-single`, {
         valeur,
         typeEvaluation: type,
         etudiantId,
@@ -67,7 +67,7 @@ export default function GradebookPage() {
 
   const ajouterAbsence = async (etudiantId: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/auth/absences`, { etudiantId, matiereId: matiereId });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/absences`, { etudiantId, matiereId: matiereId });
       if (profId) fetchClasse(profId); 
     } catch (err) {
       console.error("Erreur ajout absence");
@@ -76,7 +76,7 @@ export default function GradebookPage() {
 
   const diminuerAbsence = async (etudiantId: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/auth/absences/retirer`, { etudiantId, matiereId: matiereId });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/absences/retirer`, { etudiantId, matiereId: matiereId });
       if (profId) fetchClasse(profId); 
     } catch (err) {
       console.error("Erreur retrait absence");
@@ -85,7 +85,7 @@ export default function GradebookPage() {
 
   const justifierUneHeure = async (etudiantId: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/auth/absences/justifier`, { etudiantId, matiereId });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/absences/justifier`, { etudiantId, matiereId });
       if (profId) fetchClasse(profId);
     } catch (err) {
       console.error(err);
@@ -94,7 +94,7 @@ export default function GradebookPage() {
 
   const injustifierUneHeure = async (etudiantId: number) => {
     try {
-      await axios.post(`http://localhost:5000/api/auth/absences/injustifier`, { etudiantId, matiereId });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/absences/injustifier`, { etudiantId, matiereId });
       if (profId) fetchClasse(profId);
     } catch (err) {
       console.error(err);
