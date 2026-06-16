@@ -3,20 +3,20 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion'; // <-- Ajout de Variants ici
 import { Mail, Lock, LogIn, GraduationCap, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Pour le petit effet de chargement
+  const [isLoading, setIsLoading] = useState(false); 
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true); // On lance le chargement
+    setIsLoading(true);
 
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
@@ -29,16 +29,16 @@ export default function LoginPage() {
       localStorage.setItem('nom', response.data.nom); 
       localStorage.setItem('prenom', response.data.prenom);
       localStorage.setItem('userId', response.data.id);
-      // Redirection fluide sans alert() pour faire plus pro
+      
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.erreur || "Identifiants incorrects.");
-      setIsLoading(false); // On arrête le chargement s'il y a une erreur
+      setIsLoading(false);
     }
   };
 
-  // Configurations des animations
-  const containerVariants = {
+  // Configurations des animations STRICTEMENT TYPÉES 🛠️
+  const containerVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
   };
@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 p-4 font-sans relative overflow-hidden">
       
-      {/* Cercles décoratifs en arrière-plan (Effet moderne) */}
+      {/* Cercles décoratifs en arrière-plan */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl"></div>
 
@@ -69,7 +69,6 @@ export default function LoginPage() {
 
           <form className="space-y-6" onSubmit={handleLogin}>
             
-            {/* Message d'erreur animé */}
             {error && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} 
@@ -82,7 +81,6 @@ export default function LoginPage() {
             )}
             
             <div className="space-y-5">
-              {/* Champ Email avec icône intégrée */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                   <Mail size={20} />
@@ -98,7 +96,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Champ Mot de passe avec icône intégrée */}
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                   <Lock size={20} />
@@ -115,7 +112,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Bouton de connexion avec état de chargement */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
