@@ -20,7 +20,7 @@ export default function MesAbsencesPage() {
 
     const fetchMesAbsences = async () => {
       try {
-        const reponse = await axios.get(`http://localhost:5000/api/auth/absences/mes-absences/${userId}`);
+        const reponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/absences/mes-absences/${userId}`);
         setAbsences(reponse.data);
       } catch (error) { 
         console.error("Erreur de chargement"); 

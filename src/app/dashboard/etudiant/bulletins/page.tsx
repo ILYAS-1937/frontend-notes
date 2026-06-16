@@ -20,7 +20,7 @@ export default function MesBulletinsPage() {
 
     const fetchMesNotes = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/auth/notes/mes-notes/${userId}`);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/notes/mes-notes/${userId}`);
         setNotes(res.data);
       } catch (err) {
         console.error("Erreur lors du chargement des notes");
