@@ -85,31 +85,21 @@ export default function AdminUsersPage() {
     } catch (err) { flashMessage("Erreur d'inscription."); }
   };
 
-  const handleCreateMatiere = async (e: React.FormEvent) => {
+const handleCreateMatiere = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Résolution automatique en arrière-plan du module parent lié à la filière cible
-    const modulesAssocies = structure.modules.filter(
-      (m) => m.semestre?.filiereId === parseInt(filiereMatiere)
-    );
-
-    if (modulesAssocies.length === 0) {
-      flashMessage("Erreur : Aucun module n'est encore configuré pour cette filière.");
-      return;
-    }
-
-    // On sélectionne automatiquement le premier module trouvé pour cette filière
-    const automaticModuleId = modulesAssocies[0].id;
-
     try {
+      // On envoie directement le nom et la filière sans bloquer côté client
       await axios.post('http://localhost:5000/api/auth/matieres', { 
         nomMatiere, 
-        moduleId: automaticModuleId 
+        filiereId: filiereMatiere 
       });
+      
       flashMessage(`Matière "${nomMatiere}" ajoutée avec succès !`);
       setNomMatiere('');
-      loadPageData();
-    } catch (err) { flashMessage("Erreur lors de la création de la matière."); }
+      loadPageData(); // Rafraîchit l'annuaire et les sélecteurs
+    } catch (err) { 
+      flashMessage("Erreur lors de la création de la matière."); 
+    }
   };
 
   const handleAssignation = async (e: React.FormEvent) => {

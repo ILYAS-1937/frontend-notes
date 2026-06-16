@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, ClipboardCheck, Plus, Minus, CheckCircle2, AlertCircle, UserX } from 'lucide-react';
+import { ArrowLeft, Search, ClipboardCheck, Plus, Minus, CheckCircle2, AlertCircle, UserX, Check, X } from 'lucide-react';
 
 export default function GradebookPage() {
   const router = useRouter();
@@ -23,7 +23,6 @@ export default function GradebookPage() {
   useEffect(() => {
     const storedId = localStorage.getItem('userId');
     
-    // Sécurité anti-session corrompue
     if (!storedId || storedId === "undefined") {
       router.replace('/login');
       return;
@@ -37,7 +36,6 @@ export default function GradebookPage() {
     try {
       const res = await axios.get(`http://localhost:5000/api/auth/professeur/${id}/resultats`);
       
-      // Hydratation de la structure enrichie (matiereId, nomMatiere, etudiants)
       setClasse(res.data.etudiants || []);
       setNomMatiereActive(res.data.nomMatiere || 'Matière Inconnue');
       
@@ -58,7 +56,7 @@ export default function GradebookPage() {
         valeur,
         typeEvaluation: type,
         etudiantId,
-        matiereId: matiereId // Clé unique dynamique affectée
+        matiereId: matiereId 
       });
       setLastSaved(`Modifications enregistrées pour ${nomMatiereActive}`);
       setTimeout(() => setLastSaved(null), 2500);
@@ -82,6 +80,24 @@ export default function GradebookPage() {
       if (profId) fetchClasse(profId); 
     } catch (err) {
       console.error("Erreur retrait absence");
+    }
+  };
+
+  const justifierUneHeure = async (etudiantId: number) => {
+    try {
+      await axios.post(`http://localhost:5000/api/auth/absences/justifier`, { etudiantId, matiereId });
+      if (profId) fetchClasse(profId);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const injustifierUneHeure = async (etudiantId: number) => {
+    try {
+      await axios.post(`http://localhost:5000/api/auth/absences/injustifier`, { etudiantId, matiereId });
+      if (profId) fetchClasse(profId);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -153,7 +169,7 @@ export default function GradebookPage() {
                   <th className="px-4 py-5 text-center">CC1 (30%)</th>
                   <th className="px-4 py-5 text-center">TP (20%)</th>
                   <th className="px-4 py-5 text-center">CC2 / Exam (50%)</th>
-                  <th className="px-6 py-5 text-center">Volume Horaire Absences</th>
+                  <th className="px-6 py-5 text-center">Gestion des Absences</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -182,7 +198,9 @@ export default function GradebookPage() {
                   const nCC = etudiant.notesRecues?.find((n: any) => n.typeEvaluation === 'CC')?.valeur ?? '';
                   const nTP = etudiant.notesRecues?.find((n: any) => n.typeEvaluation === 'TP')?.valeur ?? '';
                   const nEF = etudiant.notesRecues?.find((n: any) => n.typeEvaluation === 'EXAMEN_FINAL')?.valeur ?? '';
-                  const nbAbsences = etudiant.absences?.length || 0;
+                  
+                  const absencesNJ = etudiant.absences?.filter((a: any) => !a.justifiee).length || 0;
+                  const absencesJ = etudiant.absences?.filter((a: any) => a.justifiee).length || 0;
 
                   return (
                     <tr key={etudiant.id} className="hover:bg-slate-50/60 transition-colors group">
@@ -229,29 +247,47 @@ export default function GradebookPage() {
                         />
                       </td>
                       
-                      {/* Gestionnaires d'heures d'absences */}
+                      {/* GESTION ABSENCES DOUBLE FLUX */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2.5">
-                          <button 
-                            onClick={() => diminuerAbsence(etudiant.id)} 
-                            disabled={nbAbsences === 0} 
-                            className="p-1.5 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-red-500 hover:border-red-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all shadow-sm cursor-pointer"
-                          >
-                            <Minus size={14} />
-                          </button>
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="flex items-center justify-center gap-2">
+                            {/* CORRIGÉ ICI : Appel correct de diminuerAbsence */}
+                            <button 
+                              onClick={() => diminuerAbsence(etudiant.id)} 
+                              disabled={(absencesNJ + absencesJ) === 0} 
+                              className="p-1 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-red-500 disabled:opacity-20 cursor-pointer shadow-sm"
+                            >
+                              <Minus size={14} />
+                            </button>
 
-                          <span className={`w-14 text-center px-2 py-1 rounded-full text-xs font-black border tracking-wide transition-all ${
-                            nbAbsences > 3 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : 'bg-slate-100 text-slate-600 border-slate-200'
-                          }`}>
-                            {nbAbsences} h
-                          </span>
+                            <span className="text-xs font-black text-red-600 bg-red-50 border border-red-100 px-2 py-1 rounded-md">{absencesNJ}h NJ</span>
+                            <span className="text-xs font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-md">{absencesJ}h J</span>
 
-                          <button 
-                            onClick={() => ajouterAbsence(etudiant.id)} 
-                            className="p-1.5 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-emerald-500 hover:border-emerald-200 transition-all shadow-sm cursor-pointer"
-                          >
-                            <Plus size={14} />
-                          </button>
+                            <button 
+                              onClick={() => ajouterAbsence(etudiant.id)} 
+                              className="p-1 bg-white border border-slate-200 text-slate-400 rounded-lg hover:text-emerald-500 cursor-pointer shadow-sm"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                          
+                          {/* Liens de modification de justification */}
+                          <div className="flex gap-4 text-[10px] font-black tracking-wide mt-0.5">
+                            <button 
+                              onClick={() => justifierUneHeure(etudiant.id)} 
+                              disabled={absencesNJ === 0} 
+                              className="text-emerald-600 hover:underline flex items-center gap-0.5 cursor-pointer disabled:opacity-20 disabled:no-underline"
+                            >
+                              <Check size={12} /> Justifier 1h
+                            </button>
+                            <button 
+                              onClick={() => injustifierUneHeure(etudiant.id)} 
+                              disabled={absencesJ === 0} 
+                              className="text-red-500 hover:underline flex items-center gap-0.5 cursor-pointer disabled:opacity-20 disabled:no-underline"
+                            >
+                              <X size={12} /> Injustifier 1h
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
