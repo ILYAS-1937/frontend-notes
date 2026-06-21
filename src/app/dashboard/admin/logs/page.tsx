@@ -22,6 +22,7 @@ export default function AdminLogsPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // 🔥 Étape 1 : État pour stocker la recherche
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -40,6 +41,19 @@ export default function AdminLogsPage() {
   useEffect(() => {
     fetchLogs();
   }, []);
+
+  // 🔥 Étape 2 : Filtrage dynamique des traces d'audit (Nom, Prénom, Email)
+  const filteredLogs = logs.filter((log) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true; // Si vide, on affiche tout le monde
+
+    const prenom = (log.user?.prenom || '').toLowerCase();
+    const nom = (log.user?.nom || '').toLowerCase();
+    const fullName = `${prenom} ${nom}`;
+    const email = (log.user?.email || '').toLowerCase();
+
+    return prenom.includes(query) || nom.includes(query) || fullName.includes(query) || email.includes(query);
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
@@ -63,10 +77,20 @@ export default function AdminLogsPage() {
           </button>
         </div>
 
-        {/* Titre de la page */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-800">Journal des Traces (Audit Logs)</h1>
-          <p className="text-slate-400 text-xs font-bold mt-1 uppercase tracking-wider">Historique de l'activité et des connexions de la plateforme AuthMassar</p>
+        {/* 🔥 Étape 3 : Titre de la page et Barre de Recherche alignés avec Flexbox */}
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-black text-slate-800">Journal des Traces (Audit Logs)</h1>
+            <p className="text-slate-400 text-xs font-bold mt-1 uppercase tracking-wider">Historique de l'activité et des connexions de la plateforme AuthMassar</p>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Rechercher par nom, prénom ou email..."
+            className="w-full md:max-w-md px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none text-slate-700 font-medium text-sm focus:ring-2 focus:ring-purple-500 transition-all shadow-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         {/* Tableau d'affichage */}
@@ -94,12 +118,15 @@ export default function AdminLogsPage() {
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-rose-500 font-bold text-xs uppercase">{error}</td>
                   </tr>
-                ) : logs.length === 0 ? (
+                ) : filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 text-xs">Aucune trace de connexion enregistrée dans la base Aiven.</td>
+                    <td colSpan={5} className="py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">
+                      🔍 Aucune trace d'audit trouvée pour "{searchQuery}"
+                    </td>
                   </tr>
                 ) : (
-                  logs.map((log) => (
+                  /* 🔥 Étape 4 : Remplacement de la boucle pour utiliser filteredLogs */
+                  filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4 text-slate-400 font-mono text-xs">
                         {new Date(log.createdAt).toLocaleString('fr-FR')}
@@ -117,7 +144,6 @@ export default function AdminLogsPage() {
                           {log.user?.role}
                         </span>
                       </td>
-                      {/* 🔥 BADGES DE COULEUR CONFIGURÉS SELON L'ACTION (TÂCHE 3) */}
                       <td className="px-6 py-4 text-right">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black rounded-xl border uppercase tracking-wider shadow-sm ${
                           log.action === 'Saisie des notes' ? 'bg-amber-50 text-amber-700 border-amber-200' :
