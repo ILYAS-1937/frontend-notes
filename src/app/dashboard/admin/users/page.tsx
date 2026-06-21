@@ -54,6 +54,19 @@ function ProfileModal({ userId, onClose }: ProfileModalProps) {
 
   if (!profile) return null;
 
+  // 🔥 [TÂCHE 2] Logiciel de regroupement des notes par matière pour l'étudiant
+  const matieresGrouped: { [key: string]: { CC?: number; TP?: number; EXAMEN_FINAL?: number } } = {};
+  
+  if (profile.role === 'ETUDIANT' && profile.notesRecues) {
+    profile.notesRecues.forEach((n: any) => {
+      const nomMat = n.matiere.nomMatiere;
+      if (!matieresGrouped[nomMat]) {
+        matieresGrouped[nomMat] = {};
+      }
+      matieresGrouped[nomMat][n.typeEvaluation as 'CC' | 'TP' | 'EXAMEN_FINAL'] = n.valeur;
+    });
+  }
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <motion.div 
@@ -80,7 +93,7 @@ function ProfileModal({ userId, onClose }: ProfileModalProps) {
         {/* Corps du Modal */}
         <div className="p-6 space-y-6">
           
-          {/* 🎓 DOSSIER ÉTUDIANT */}
+          {/* 🎓 DOSSIER ÉTUDIANT RESTRUCTURÉ (TÂCHE 2) */}
           {profile.role === 'ETUDIANT' && (
             <>
               <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-800 text-sm font-bold flex justify-between items-center">
@@ -88,29 +101,61 @@ function ProfileModal({ userId, onClose }: ProfileModalProps) {
                 <span className="bg-emerald-600 text-white text-xs px-3 py-1 rounded-xl shadow-sm">{profile.filiere?.nomFiliere || 'Génie Informatique'}</span>
               </div>
 
-              {/* Tableau des Notes */}
+              {/* Nouveau Tableau des Notes Groupées par Module */}
               <div>
-                <h3 className="text-xs font-black uppercase text-slate-400 mb-3 tracking-wider">📊 Relevé de Notes</h3>
+                <h3 className="text-xs font-black uppercase text-slate-400 mb-3 tracking-wider">📊 Relevé de Notes Pédagogique (Structure ENSA)</h3>
                 <div className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="bg-slate-50 text-[10px] font-bold text-slate-400 border-b border-slate-100 uppercase tracking-wider">
-                        <th className="p-3 px-4">Matière</th>
-                        <th className="p-3">Évaluation</th>
-                        <th className="p-3 text-right px-4">Note / 20</th>
+                      <tr className="bg-slate-50 text-[10px] font-bold text-slate-400 border-b border-slate-100 uppercase tracking-wider text-center">
+                        <th className="p-3 px-4 text-left">Matière</th>
+                        <th className="p-3">CC (30%)</th>
+                        <th className="p-3">TP (20%)</th>
+                        <th className="p-3">Exam (50%)</th>
+                        <th className="p-3 bg-purple-50/50 text-purple-700 font-black">Moyenne</th>
+                        <th className="p-3 text-right px-4">Statut</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                      {profile.notesRecues.length === 0 ? (
-                        <tr><td colSpan={3} className="p-6 text-center text-slate-400 text-xs">Aucune note enregistrée dans le système.</td></tr>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700 text-center">
+                      {Object.keys(matieresGrouped).length === 0 ? (
+                        <tr><td colSpan={6} className="p-6 text-center text-slate-400 text-xs">Aucune note enregistrée dans le système.</td></tr>
                       ) : (
-                        profile.notesRecues.map((n: any) => (
-                          <tr key={n.id} className="hover:bg-slate-50/40 transition-colors">
-                            <td className="p-3 px-4 font-bold text-slate-800">{n.matiere.nomMatiere}</td>
-                            <td className="p-3"><span className="text-[10px] uppercase bg-slate-100 text-slate-600 font-black px-2 py-0.5 rounded">{n.typeEvaluation}</span></td>
-                            <td className={`p-3 text-right px-4 font-black text-sm ${n.valeur >= 12 ? 'text-emerald-600' : 'text-rose-500'}`}>{n.valeur.toFixed(2)}</td>
-                          </tr>
-                        ))
+                        Object.keys(matieresGrouped).map((nomMat) => {
+                          const grades = matieresGrouped[nomMat];
+                          const cc = grades.CC;
+                          const tp = grades.TP;
+                          const exam = grades.EXAMEN_FINAL;
+
+                          // Calcul mathématique rigoureux de la moyenne de module ENSA
+                          const moyenne = parseFloat(((cc ?? 0) * 0.3 + (tp ?? 0) * 0.2 + (exam ?? 0) * 0.5).toFixed(2));
+                          const isValidated = moyenne >= 12.00;
+
+                          return (
+                            <tr key={nomMat} className="hover:bg-slate-50/40 transition-colors">
+                              {/* Nom matière */}
+                              <td className="p-3 px-4 font-bold text-slate-800 text-left">{nomMat}</td>
+                              
+                              {/* Notes partielles */}
+                              <td className="p-3 text-slate-500 font-semibold">{cc !== undefined ? cc.toFixed(2) : '--'}</td>
+                              <td className="p-3 text-slate-500 font-semibold">{tp !== undefined ? tp.toFixed(2) : '--'}</td>
+                              <td className="p-3 text-slate-500 font-semibold">{exam !== undefined ? exam.toFixed(2) : '--'}</td>
+                              
+                              {/* Moyenne générale calculée */}
+                              <td className="p-3 bg-purple-50/30 font-black text-purple-950 text-sm">{moyenne.toFixed(2)}</td>
+                              
+                              {/* Badge dynamique de décision d'affectation */}
+                              <td className="p-3 text-right px-4">
+                                <span className={`px-2.5 py-0.5 text-[9px] font-black rounded-full border ${
+                                  isValidated 
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                                }`}>
+                                  {isValidated ? 'VALIDÉ' : 'RATTRAPAGE'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -198,7 +243,8 @@ export default function AdminUsersPage() {
   const [utilisateurs, setUtilisateurs] = useState<any[]>([]);
   const [structure, setStructure] = useState<{ filieres: any[]; modules: any[]; matieres: any[] }>({ filieres: [], modules: [], matieres: [] });
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null); // 🔥 State pour le modal de supervision
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Formulaire 1 : Inscription Membre
   const [nom, setNom] = useState('');
@@ -302,6 +348,17 @@ export default function AdminUsersPage() {
     } catch (err) { flashMessage("Erreur d'affectation."); }
   };
 
+  const filteredUsers = utilisateurs.filter((u) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    const fullName = `${u.prenom} ${u.nom}`.toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    const filiere = (u.filiere?.nomFiliere || '').toLowerCase();
+
+    return fullName.includes(query) || email.includes(query) || filiere.includes(query);
+  });
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
       <div className="max-w-6xl mx-auto">
@@ -316,7 +373,6 @@ export default function AdminUsersPage() {
               <ArrowLeft size={16} /> <span>Retour au Dashboard</span>
             </button>
             
-            {/* 🔥 BOUTON D'ACCÈS POUR LES LOGS D'AUDIT */}
             <button 
               onClick={() => router.push('/dashboard/admin/logs')} 
               className="flex items-center gap-2 text-purple-600 hover:text-white hover:bg-purple-600 font-bold bg-white px-4 py-2 rounded-xl border border-purple-200 shadow-sm cursor-pointer transition-all text-xs"
@@ -420,9 +476,22 @@ export default function AdminUsersPage() {
 
         </div>
 
-        {/* RECAPITULATIF : ANNUAIRE AVEC ACTION DE SUPERVISION */}
+        {/* RECAPITULATIF : ANNUAIRE AVEC ACTION DE SUPERVISION ET BARRE DE RECHERCHE */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mb-12">
-          <div className="p-6 border-b border-slate-100"><h2 className="text-lg font-black text-slate-800 flex items-center gap-2"><Users className="text-purple-600" size={22} /> Annuaire et Affectations Récapitulatives</h2></div>
+          <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/30">
+            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <Users className="text-purple-600" size={22} /> 
+              <span>Annuaire et Affectations Récapitulatives</span>
+            </h2>
+            
+            <input
+              type="text"
+              placeholder="Rechercher par nom, prénom, email ou filière..."
+              className="w-full md:max-w-md px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none text-slate-700 font-medium text-sm focus:ring-2 focus:ring-purple-500 transition-all shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b">
@@ -432,13 +501,15 @@ export default function AdminUsersPage() {
                   <th className="px-6 py-4">Rôle</th>
                   <th className="px-6 py-4">Filière</th>
                   <th className="px-6 py-4">Matières Enseignées</th>
-                  <th className="px-6 py-4 text-right">Actions</th> {/* 🔥 Nouvelle Colonne */}
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {isLoading ? (
                   <tr><td colSpan={6} className="py-10 text-center text-slate-400">Chargement des données du registre...</td></tr>
-                ) : utilisateurs.map((u) => (
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={6} className="py-10 text-center text-slate-400 font-bold text-xs text-slate-400 uppercase tracking-wider">Aucun utilisateur trouvé pour "{searchQuery}"</td></tr>
+                ) : filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-3.5 font-bold text-slate-800">{u.prenom} {u.nom}</td>
                     <td className="px-6 py-3.5 text-slate-500">{u.email}</td>
@@ -451,7 +522,6 @@ export default function AdminUsersPage() {
                         )) : <span className="text-slate-400">--</span>}
                       </div>
                     </td>
-                    {/* 🔥 CELLULE DE BOUTON : DÉCLENCHEUR DU PROFILE MODAL */}
                     <td className="px-6 py-3.5 text-right">
                       <button
                         onClick={() => setSelectedUserId(u.id)}
@@ -470,7 +540,6 @@ export default function AdminUsersPage() {
 
       </div>
 
-      {/* 🔥 RENDU ANCILLAIRE : AFFICHAGE CONDITIONNEL DU MODAL DE SUPERVISION */}
       <AnimatePresence>
         {selectedUserId && (
           <ProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} />

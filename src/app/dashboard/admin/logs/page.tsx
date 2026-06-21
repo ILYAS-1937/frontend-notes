@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Key, FileText, Eye } from 'lucide-react';
 
 interface Log {
   id: number;
@@ -117,9 +117,17 @@ export default function AdminLogsPage() {
                           {log.user?.role}
                         </span>
                       </td>
+                      {/* 🔥 BADGES DE COULEUR CONFIGURÉS SELON L'ACTION (TÂCHE 3) */}
                       <td className="px-6 py-4 text-right">
-                        <span className="px-2.5 py-1 text-[10px] font-black rounded bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wider">
-                          🔑 {log.action}
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-black rounded-xl border uppercase tracking-wider shadow-sm ${
+                          log.action === 'Saisie des notes' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          log.action === 'Visualisation des notes' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                          'bg-slate-100 text-slate-700 border-slate-200'
+                        }`}>
+                          {log.action === 'Saisie des notes' && <FileText size={11} />}
+                          {log.action === 'Visualisation des notes' && <Eye size={11} />}
+                          {log.action === 'CONNEXION' && <Key size={11} />}
+                          <span>{log.action}</span>
                         </span>
                       </td>
                     </tr>
